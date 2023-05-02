@@ -10,8 +10,7 @@ import {
 } from 'three';
 import { I3DObject } from './I3DObject';
 import { Renderable } from './IRenderable';
-import { PhysicsEngine } from './engine/PhysicsEngine';
-import { Particle } from '.';
+import { PhysicsEngine, Particle } from '../physics';
 
 export class SimulationSpace {
     public origin: Vector3;
@@ -27,7 +26,7 @@ export class SimulationSpace {
         this._engine = new PhysicsEngine(particles, this);
     }
 
-    update(camera: Camera): void {
+    update(): void {
         this._engine.update(this._clock.getDelta());
     }
 

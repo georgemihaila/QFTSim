@@ -7,7 +7,6 @@ interface VisualSceneProps {
 export function VisualScene({ children }: VisualSceneProps) {
   return (
     <>
-      <h1>VisualScene</h1>
       {children}
     </>
   );

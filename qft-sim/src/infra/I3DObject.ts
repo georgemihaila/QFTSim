@@ -1,4 +1,4 @@
-import { IRenderable } from "./IRenderable";
+import { IRenderable } from '.';
 
 export interface I3DObject extends IRenderable {
     enabled: boolean

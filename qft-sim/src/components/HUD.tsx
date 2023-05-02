@@ -3,6 +3,7 @@ import { PhysicsEngineSelector } from "./PhysicsEngineSelector"
 import { SceneSelector } from "./SceneSelector"
 import { Container, Group } from "@mantine/core"
 import { CoobScene } from "../scenes"
+import { ManyObjects } from "../scenes/ManyObjects"
 export interface IHUDProps {
     children: React.ReactNode
     sceneChanged: (scene: React.ReactNode) => void
@@ -17,9 +18,14 @@ export function HUD(props: Partial<IHUDProps>) {
     const onSceneChanged = (scene: string) => {
         switch (scene) {
             case 'cube':
-                return setScene(<CoobScene />)
+                setScene(<CoobScene />)
+                break;
+            case 'many':
+                setScene(<ManyObjects />)
+                break;
             default:
                 setScene(<></>)
+                break;
         }
     }
 

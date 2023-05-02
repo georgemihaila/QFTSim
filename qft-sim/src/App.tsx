@@ -3,7 +3,7 @@ import './App.css';
 import { Canvas } from '@react-three/fiber'
 import { Stage, Grid, OrbitControls, Hud } from '@react-three/drei'
 import { HUD } from './components/HUD';
-import { CoobScene } from './components';
+import { CoobScene } from './scenes';
 
 function App() {
   const ref = React.useRef<any>()
@@ -19,7 +19,6 @@ function App() {
   }, [])
 
   const [scene, setScene] = React.useState<React.ReactNode | undefined>()
-
   return (
     <div ref={ref} className="App">
       <HUD sceneChanged={(scene) => setScene(scene)} />

@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Color, DirectionalLight, Euler, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, Raycaster, Scene, SphereGeometry, Vector2, Vector3, WebGLRenderer } from "three";
-import { ICustomScene } from "./ICustomScene";
-import { I3DObject } from './I3DObject';
+import { I3DObject, ICustomScene } from '../infra';
 
 export abstract class CustomSceneBase implements ICustomScene {
     protected _renderer = new WebGLRenderer()

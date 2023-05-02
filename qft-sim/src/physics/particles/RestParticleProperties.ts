@@ -1,7 +1,7 @@
 import { Vector3 } from 'three';
-import { DecayMode } from './DecayMode';
+import { DecayMode } from '../DecayMode';
 import { QuarkFlavor, ParticleProperties, ParticleType, Isospin, ColorCharge, Generation } from './ParticleProperties';
-import { ExistingAntiparticles, ExistingParticles, KnownParticle } from './particles/ParticleTypes';
+import { ExistingAntiparticles, ExistingParticles, KnownParticle } from './ParticleTypes';
 
 export const ELECTRON_PROPERTIES: ParticleProperties = {
     type: ParticleType.Lepton,
