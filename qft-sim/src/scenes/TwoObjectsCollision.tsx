@@ -18,7 +18,7 @@ function range(start: number, end: number, step: number = 1): number[] {
 }
 
 const particleCount = 2
-const initialCuboidSize = 1
+const initialCuboidSize = 0.1
 
 const generateRandomParticles = () => {
     const position = new Vector3(Math.random() * initialCuboidSize, Math.random() * initialCuboidSize, Math.random() * initialCuboidSize)
@@ -34,7 +34,7 @@ const generateRandomParticles = () => {
             position: position.clone().add(new Vector3(0.05, 0, 0)),
             speed: new Vector3(0, 0, 0),
             acceleration: new Vector3(),
-            mass: 9.1e-31,//Math.random() * 1e3,
+            mass: Math.random() * 1e3,
             chargeEV: 1
         })
     ]

@@ -17,14 +17,16 @@ export class PhysicsEngine {
     private _particles: Particle[]
     private _origin: Vector3
     private _end: Vector3
-    private _hasGravity: boolean = false;
+    private _hasGravity: boolean = true;
     private _hasElectricField: boolean = true;
     private _autoscaleTime = true;
     private _timeScale = 1;
-    private _autoscaleTimeTarget = 1e0 // m/s (1m = 1 grid line)
+    private _autoscaleTimeTarget = 1e-1 // m/s (1m = 1 grid line)
     private _fastestParticleSpeed = 0
     private _restitution = 0.5
     private _friction = 0.5
+    private _wallCollisionEnergyLoss = 0.1
+    private totalMass = 0
     constructor(
         particles: Particle[],
         _simulationSpace: SimulationSpace,
@@ -33,22 +35,35 @@ export class PhysicsEngine {
         this._particles = particles
         this._origin = _simulationSpace.origin.clone()
         this._end = _simulationSpace.origin.clone().add(_simulationSpace.size.clone())
+        if (this._hasGravity) usePlanetaryGravity(this._particles)
+        this.totalMass = this._particles.reduce((acc, cur) => acc + cur.relativisticMass, 0)
     }
 
     public update(deltaTime: number): void {
         this.updatePosition(deltaTime)
         this.handleWallCollisions()
-        if (this._hasGravity) usePlanetaryGravity(this._particles)
         useNewtonianGravity(this._particles)
         if (this._hasElectricField) useElectricFieldRepulsion(this._particles)
         //this.handleCollisions()
+    }
+
+    debounce(func: Function, delay: number): Function {
+        let timeoutId: ReturnType<typeof setTimeout>
+
+        return function (this: any) { // Define the type of `this`
+            const context = this
+            const args = arguments
+
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => func.apply(context, args), delay)
+        }
     }
 
     // Update position, acceleration, and speed
     private updatePosition(deltaTime: number): void {
         const averagePosition = new Vector3(0, 0, 0)
         const averageSpeed = new Vector3(0, 0, 0)
-
+        let energy = 0
         if (this._autoscaleTime) {
             for (const particle of this._particles) {
                 const speed = particle.properties.speed?.length() ?? 0
@@ -126,6 +141,8 @@ export class PhysicsEngine {
                     const separation = collisionNormal.clone().multiplyScalar(radiiSum - distance)
                     p1.properties.position.add(separation.clone().multiplyScalar(1 / p1.properties.mass))
                     p2.properties.position.sub(separation.clone().multiplyScalar(1 / p2.properties.mass))
+
+
                 }
             }
         }
@@ -138,12 +155,12 @@ export class PhysicsEngine {
                 if (particle.properties.position) {
                     if (particle.properties.position?.getComponent(axis) <= this._origin.getComponent(axis)) {
                         // Bounce off the wall by reversing the speed on this axis
-                        particle.properties.speed?.setComponent(axis, -particle.properties.speed?.getComponent(axis))
+                        particle.properties.speed?.setComponent(axis, (1 - this._wallCollisionEnergyLoss) * -particle.properties.speed?.getComponent(axis))
                         // Set the particle position to the boundary
                         particle.properties.position.setComponent(axis, this._origin.getComponent(axis))
                     } else if (particle.properties.position.getComponent(axis) >= this._end.getComponent(axis)) {
                         // Bounce off the wall by reversing the speed on this axis
-                        particle.properties.speed?.setComponent(axis, -particle.properties.speed?.getComponent(axis))
+                        particle.properties.speed?.setComponent(axis, (1 - this._wallCollisionEnergyLoss) * -particle.properties.speed?.getComponent(axis))
                         // Set the particle position to the boundary
                         particle.properties.position.setComponent(axis, this._end.getComponent(axis))
                     }

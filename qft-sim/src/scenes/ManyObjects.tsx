@@ -14,7 +14,7 @@ function range(start: number, end: number, step: number = 1): number[] {
     return result
 }
 
-const particleCount = 100
+const particleCount = 500
 const initialCuboidSize = .1
 const particleSize = initialCuboidSize / 75
 
@@ -30,23 +30,26 @@ const orange = new Color('orange')
 
 export function ManyObjects() {
     const ref = useRef<any>()
-
+    const ref2 = useRef<any>()
     const [particles, setparticles] = useState<Particle[]>(generateRandomParticles())
-    const simulationSpace = new SimulationSpace(new Vector3(0, 0, 0), new Vector3(initialCuboidSize * 3, initialCuboidSize * 3, initialCuboidSize * 3), particles)
+    const simulationSpace = new SimulationSpace(new Vector3(0, 0, 0), new Vector3(initialCuboidSize * 1, initialCuboidSize * 1, initialCuboidSize * 1), particles)
 
     useFrame(({ clock }) => {
         const a = clock.getElapsedTime()
         simulationSpace.update()
     })
+    particles.forEach((particle, i) => {
+        particle.ref = ref
+    })
     return (
         <>
-            {particles.map((particle, i) => {
-                particle.ref = useRef<any>()
-                return <animated.mesh key={i} ref={particle.ref} scale={new Vector3(particleSize, particleSize, particleSize)} position={particle.properties.position} >
+
+            <instancedMesh ref={ref} args={[undefined, undefined, particleCount]}>
+                <animated.mesh ref={ref2} >
                     <sphereGeometry />
                     <meshNormalMaterial />
                 </animated.mesh>
-            })}
+            </instancedMesh>
         </>
     )
 }

@@ -31,11 +31,22 @@ export class SimulationSpace {
     update(): void {
         this._engine.update(this._clock.getDelta())
         //update particle position and rotation based on the ref object
+        const temp = new Object3D()
         for (let i = 0; i < this._particles.length; i++) {
-            if (this._particles[i].properties.position)
+
+            if (this._particles[i].properties.position) {
+                temp.position.copy(this._particles[i].properties.position ?? new Vector3())
                 this._particles[i].ref.current.position.copy(this._particles[i].properties.position)
-            if (this._particles[i].properties.rotation)
+            }
+            if (this._particles[i].properties.rotation) {
+                // temp.rotation.copy(this._particles[i].properties.rotation)
                 this._particles[i].ref.current.rotation.copy(this._particles[i].properties.rotation)
+            }
+            this._particles[i].ref.current.setMatrixAt(i, temp.matrix)
+
+
+
+            this._particles[i].ref.current.setMatrixAt(i, temp.matrix)
         }
     }
 
