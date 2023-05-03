@@ -18,8 +18,18 @@ export class PhysicsEngine {
     private _origin: Vector3
     private _end: Vector3
     private _hasGravity: boolean = false;
-
-    constructor(particles: Particle[], _simulationSpace: SimulationSpace) {
+    private _hasElectricField: boolean = true;
+    private _autoscaleTime = true;
+    private _timeScale = 1;
+    private _autoscaleTimeTarget = 1e0 // m/s (1m = 1 grid line)
+    private _fastestParticleSpeed = 0
+    private _restitution = 0.5
+    private _friction = 0.5
+    constructor(
+        particles: Particle[],
+        _simulationSpace: SimulationSpace,
+        private _centerOfMassChangedCallback?: (centerOfMass: Vector3) => void
+    ) {
         this._particles = particles
         this._origin = _simulationSpace.origin.clone()
         this._end = _simulationSpace.origin.clone().add(_simulationSpace.size.clone())
@@ -27,43 +37,100 @@ export class PhysicsEngine {
 
     public update(deltaTime: number): void {
         this.updatePosition(deltaTime)
-        //this.handleCollisions();
         this.handleWallCollisions()
         if (this._hasGravity) usePlanetaryGravity(this._particles)
         useNewtonianGravity(this._particles)
-        useElectricFieldRepulsion(this._particles)
+        if (this._hasElectricField) useElectricFieldRepulsion(this._particles)
+        //this.handleCollisions()
     }
 
     // Update position, acceleration, and speed
     private updatePosition(deltaTime: number): void {
-        deltaTime /= 1000 // Convert to seconds
+        const averagePosition = new Vector3(0, 0, 0)
+        const averageSpeed = new Vector3(0, 0, 0)
+
+        if (this._autoscaleTime) {
+            for (const particle of this._particles) {
+                const speed = particle.properties.speed?.length() ?? 0
+                if (speed > this._fastestParticleSpeed) this._fastestParticleSpeed = speed
+            }
+            this._timeScale = this._fastestParticleSpeed / this._autoscaleTimeTarget
+            deltaTime /= this._timeScale === 0 ? 1 : this._timeScale
+            console.log(`Autoscaling time to ${1 / this._timeScale}`)
+        }
+
         for (const particle of this._particles) {
             const newPosition = particle.properties.position?.clone().add(particle.properties.speed?.clone().multiplyScalar(deltaTime) ?? new Vector3()) ?? new Vector3()
             const newSpeed = particle.properties.speed?.clone().add(particle.properties.acceleration?.clone().multiplyScalar(deltaTime) ?? new Vector3()) ?? new Vector3()
 
             particle.properties.position?.copy(newPosition)
             particle.properties.speed?.copy(newSpeed)
+
+            averagePosition.add(newPosition.multiplyScalar(particle.relativisticMass / this._particles.length))
+            averageSpeed.add(newSpeed)
         }
+        averagePosition.divideScalar(this._particles.length)
+        averageSpeed.divideScalar(this._particles.length)
+        if (this._centerOfMassChangedCallback) this._centerOfMassChangedCallback(averagePosition)
     }
     // Handle collisions
     private handleCollisions(): void {
-        for (let i = 0; i < this._particles.length; i++) {
-            const p1 = this._particles[i]
+        const particles = this._particles
+        const numParticles = particles.length
 
-            for (let j = i + 1; j < this._particles.length; j++) {
-                const p2 = this._particles[j]
-                if (!p1.properties.position || !p2.properties.position) continue
-                const distance = p1.properties.position.distanceTo(p2.properties.position)
-                const radiusSum = p1.scale.x + p2.scale.x // Assuming uniform scaling
+        for (let i = 0; i < numParticles; i++) {
+            const p1 = particles[i]
+            const position1 = p1.properties.position
+            if (!position1) continue
 
-                if (distance <= radiusSum) {
-                    // Basic collision response - reverse the speed of both particles
-                    p1.properties.speed?.negate()
-                    p2.properties.speed?.negate()
+            for (let j = i + 1; j < numParticles; j++) {
+                const p2 = particles[j]
+                const position2 = p2.properties.position ?? new Vector3()
+
+                if (!p1.properties.mass || !p2.properties.mass || !p1.properties.position || !p2.properties.position) continue
+
+                const distance = position1.distanceTo(position2)
+                const radiiSum = p1.scale.length() + p2.scale.length()
+
+                if (distance < radiiSum) {
+                    // Calculate collision normal and tangent vectors
+                    const collisionNormal = new Vector3().subVectors(position2, position1).normalize()
+                    const collisionTangent = new Vector3().crossVectors(collisionNormal, new Vector3(0, 0, 1)).normalize()
+
+                    // Calculate relative speed and relative position
+                    const speed1 = p1.properties.speed || new Vector3()
+                    const speed2 = p2.properties.speed || new Vector3()
+                    const relativespeed = new Vector3().subVectors(speed2, speed1)
+                    const relativePosition = new Vector3().subVectors(position2, position1)
+
+                    // Calculate impulse magnitude and direction
+                    const numerator = -(1 + this._restitution) * relativespeed.dot(collisionNormal)
+                    const denominator = collisionNormal.dot(collisionNormal) * (1 / p1.properties.mass + 1 / p2.properties.mass)
+                    const impulseMagnitude = numerator / denominator
+                    const impulse = collisionNormal.clone().multiplyScalar(impulseMagnitude)
+
+                    // Apply impulses to particles
+                    p1.properties.speed = speed1.clone().add(impulse.clone().multiplyScalar(1 / p1.properties.mass))
+                    p2.properties.speed = speed2.clone().sub(impulse.clone().multiplyScalar(1 / p2.properties.mass))
+
+                    // Add friction
+                    const friction = this._friction
+                    const impulseTangentMagnitude = relativespeed.dot(collisionTangent) / denominator
+                    const impulseTangent = collisionTangent.clone().multiplyScalar(impulseTangentMagnitude)
+
+                    const impulseCombined = impulse.clone().add(impulseTangent.clone().multiplyScalar(friction))
+                    p1.properties.speed.add(impulseCombined.clone().multiplyScalar(1 / p1.properties.mass))
+                    p2.properties.speed.sub(impulseCombined.clone().multiplyScalar(1 / p2.properties.mass))
+
+                    // Separate particles to prevent overlap
+                    const separation = collisionNormal.clone().multiplyScalar(radiiSum - distance)
+                    p1.properties.position.add(separation.clone().multiplyScalar(1 / p1.properties.mass))
+                    p2.properties.position.sub(separation.clone().multiplyScalar(1 / p2.properties.mass))
                 }
             }
         }
     }
+
 
     private handleWallCollisions(): void {
         for (const particle of this._particles) {

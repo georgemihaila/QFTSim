@@ -17,7 +17,9 @@ export function SceneSelector(props: Partial<ISceneSelectorProps>) {
             }}
             data={[
                 { value: 'cube', label: 'Coob' },
-                { value: 'many', label: 'Many objects' }
+                { value: 'many', label: 'Many objects' },
+                { value: 'simple-collision', label: 'Simple collision' },
+                { value: 'conveyor', label: 'Conveyor' }
             ]}
         />
         {props.children}

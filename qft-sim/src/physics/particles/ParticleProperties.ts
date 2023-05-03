@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 import { Tensor, DecayMode } from '../'
 
-export interface ParticleProperties {
+export interface ParticleProperties extends RelativisticProperties {
     type: ParticleType
     mass: number // in electron volts (eV)
     chargeEV: number // in elementary charge units (e)
@@ -30,13 +30,16 @@ export interface ParticleProperties {
     rotation?: Vector3 // in radians
     rotationSpeed?: Vector3 // in radians per second (rad/s)
     acceleration?: Vector3 // in meters per second squared (m/s^2)
-    relativisticSpeed?: number // dimensionless, calculated as v / c where c is the speed of light
-    relativisticAcceleration?: Vector3 // in meters per second squared (m/s^2), taking into account relativistic effects
     massTensor?: Tensor // a rank-2 tensor representing the mass distribution of the particle
     lengthTensor?: Tensor // a rank-2 tensor representing the length scaling of the particle
 }
 
-
+export interface RelativisticProperties {
+    relativisticSpeed?: number // dimensionless, calculated as v / c where c is the speed of light
+    relativisticAcceleration?: Vector3 // in meters per second squared (m/s^2), taking into account relativistic effects
+    relativisticMass?: number // in electron volts (eV)
+    energy?: number // in electron volts (eV)
+}
 
 export enum ParticleType {
     Quark,

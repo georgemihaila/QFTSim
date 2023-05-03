@@ -27,7 +27,7 @@ export const useNewtonianGravity = (particles: Particle[]) => {
             }
 
             const distance = particle_j.properties.position.clone().sub(particle_i.properties.position) // distance vector between the two particles
-            const r = distance.length() // distance between the two particles
+            const r = Math.max(distance.length(), 0.1) // distance between the two particles
             const force = distance.normalize().multiplyScalar((G * particle_i.properties.mass * particle_j.properties.mass) / (r * r)) // gravitational force vector between the two particles
 
             particle_i.properties.acceleration?.add(force.clone().multiplyScalar(1 / particle_i.properties.mass)) // add acceleration to particle i

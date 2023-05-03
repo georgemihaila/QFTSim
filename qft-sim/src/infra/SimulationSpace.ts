@@ -20,11 +20,11 @@ export class SimulationSpace {
     private _particles: Particle[] = [];
     private _clock: Clock = new Clock();
 
-    constructor(origin: Vector3, size: Vector3, particles: Particle[]) {
+    constructor(origin: Vector3, size: Vector3, particles: Particle[], private _centerOfMassChangedCallback?: (centerOfMass: Vector3) => void) {
         this.origin = origin
         this.size = size
         this.enabled = true
-        this._engine = new PhysicsEngine(particles, this)
+        this._engine = new PhysicsEngine(particles, this, _centerOfMassChangedCallback)
         this._particles = particles
     }
 

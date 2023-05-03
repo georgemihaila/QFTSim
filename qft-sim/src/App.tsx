@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber'
 import { Stage, Grid, OrbitControls, Hud } from '@react-three/drei'
 import { HUD } from './components/HUD'
 import { CoobScene } from './scenes'
+import { AxesHelper } from 'three'
 
 function App() {
   const ref = React.useRef<any>()
@@ -26,10 +27,10 @@ function App() {
         width: width,
         height: height,
       }}
-        gl={{ logarithmicDepthBuffer: true }} shadows camera={{ position: [0, 2, 2], fov: 70 }}>
+        gl={{ logarithmicDepthBuffer: true }} shadows camera={{ position: [0, 0.3, 0.3], fov: 90, near: 0.0001, zoom: 1.5 }}>
         <OrbitControls
           autoRotate
-          autoRotateSpeed={0.05}
+          autoRotateSpeed={0.0}
           enableZoom
           enableDamping
           enableRotate
