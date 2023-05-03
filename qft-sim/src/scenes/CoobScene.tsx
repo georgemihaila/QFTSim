@@ -1,29 +1,32 @@
 import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Vector3 } from 'three';
 import { Coob } from '../physics';
 import { animated } from '@react-spring/three'
 import { useTexture } from '@react-three/drei';
+import { useHover } from "@mantine/hooks"
+import { useDelayedHover } from '@mantine/core/lib/Floating';
 
 export function CoobScene() {
-    const meshRef = useRef<THREE.Mesh>(null);
-    const coob = new Coob(new Vector3(0, 0.5, 0));
-    coob.ref = meshRef.current
-
-    // Update the mesh rotation based on the spring value
+    const [selected, setSelected] = useState(false)
+    useEffect(() => {
+        console.log(selected)
+    }, [selected])
+    const ref = useRef<any>();
+    const [coob, setCoob] = useState(new Coob(new Vector3(0, 0.5, 0)))
     useFrame(() => {
         coob.tick()
-        if (meshRef.current) {
-            meshRef.current.rotation.y = coob.rotation.y;
-            meshRef.current.rotation.x = coob.rotation.x;
-            meshRef.current.rotation.z = coob.rotation.z;
+        if (ref.current?.rotation) {
+            ref.current.rotation.y = coob.rotation.y;
+            ref.current.rotation.x = coob.rotation.x;
+            ref.current.rotation.z = coob.rotation.z;
         }
     });
     const texture = useTexture('/terrazo.png')
     return (
-        <animated.mesh position={coob.position} ref={meshRef}>
+        <animated.mesh position={coob.position} ref={ref} onClick={() => setSelected(!selected)}>
             <boxBufferGeometry />
-            <meshStandardMaterial map={texture} roughness={0} metalness={0.8} />
+            <meshStandardMaterial wireframe={selected} map={texture} roughness={0} metalness={0.8} />
         </animated.mesh>
     );
 }

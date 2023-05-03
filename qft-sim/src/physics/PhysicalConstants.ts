@@ -12,6 +12,7 @@ export class PhysicalConstants {
 
     // Gravitational constant (N * m^2 / kg^2)
     public static readonly GRAVITATIONAL_CONSTANT: number = 6.67430e-11; // CODATA 2018
+    public static readonly G: number = 9.81; // CODATA 2014
 
     // Coulomb constant (N * m^2 / C^2)
     public static readonly COULOMB_CONSTANT: number = 8.9875517923e9; // CODATA 2018

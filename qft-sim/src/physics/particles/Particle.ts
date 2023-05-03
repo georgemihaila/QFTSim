@@ -11,6 +11,7 @@ export abstract class Particle implements ParticleParameters {
     public enabled: boolean = true;
     public properties: Partial<ParticleProperties>;
     public scale: Vector3 = new Vector3(1, 1, 1);
+    public ref?: any
     constructor(color: Color, properties: Partial<ParticleProperties> = {
         position: new Vector3(),
         speed: new Vector3(),

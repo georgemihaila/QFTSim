@@ -1,9 +1,9 @@
-import React from 'react';
-import './App.css';
+import React from 'react'
+import './App.css'
 import { Canvas } from '@react-three/fiber'
 import { Stage, Grid, OrbitControls, Hud } from '@react-three/drei'
-import { HUD } from './components/HUD';
-import { CoobScene } from './scenes';
+import { HUD } from './components/HUD'
+import { CoobScene } from './scenes'
 
 function App() {
   const ref = React.useRef<any>()
@@ -26,7 +26,7 @@ function App() {
         width: width,
         height: height,
       }}
-        gl={{ logarithmicDepthBuffer: false }} shadows camera={{ position: [-3, 5, 5], fov: 70 }}>
+        gl={{ logarithmicDepthBuffer: true }} shadows camera={{ position: [0, 2, 2], fov: 70 }}>
         <OrbitControls
           autoRotate
           autoRotateSpeed={0.05}
@@ -45,7 +45,7 @@ function App() {
         </Hud>
       </Canvas>
     </div >
-  );
+  )
 }
 
-export default App;
+export default App
