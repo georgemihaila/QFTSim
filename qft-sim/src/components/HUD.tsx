@@ -5,6 +5,7 @@ import { Container, Group } from "@mantine/core"
 import { Conveyor, CoobScene } from "../scenes"
 import { ManyObjects } from "../scenes/ManyObjects"
 import { TwoObjectsCollision } from "../scenes"
+
 export interface IHUDProps {
     children: React.ReactNode
     sceneChanged: (scene: React.ReactNode) => void

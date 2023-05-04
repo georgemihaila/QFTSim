@@ -24,7 +24,13 @@ export class SimulationSpace {
         this.origin = origin
         this.size = size
         this.enabled = true
-        this._engine = new PhysicsEngine(particles, this, _centerOfMassChangedCallback)
+        this._engine = new PhysicsEngine({
+            particles: particles,
+            simulationSpace: this,
+            hasGravity: true,
+            gravitationalAcceleration: 9.8,
+            hasElectricField: true,
+        }, _centerOfMassChangedCallback)
         this._particles = particles
     }
 

@@ -1,5 +1,6 @@
 export * from './BuildingBlock';
 export * from './City';
+export * from './hooks';
 export * from './I3DObject';
 export * from './ICustomScene';
 export * from './IRenderable';

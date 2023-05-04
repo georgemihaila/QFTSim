@@ -1,4 +1,4 @@
-import { Particle, useElectricFieldRepulsion } from '../'
+import { IWorldParameters, Particle, useElectricFieldRepulsion } from '../'
 import { Vector3 } from 'three'
 import { SimulationSpace } from '../../infra'
 import { PhysicalConstants } from '../'
@@ -8,7 +8,7 @@ export interface PhysicsEngineWorldParameters {
     hasGravity: boolean
 }
 
-export interface PhysicsEngineParameters {
+export interface PhysicsEngineParameters extends IWorldParameters {
     particles: Particle[]
     simulationSpace: SimulationSpace
 }
@@ -17,24 +17,25 @@ export class PhysicsEngine {
     private _particles: Particle[]
     private _origin: Vector3
     private _end: Vector3
-    private _hasGravity: boolean = true;
-    private _hasElectricField: boolean = true;
+    private _hasGravity: boolean
+    private _hasElectricField: Boolean
     private _autoscaleTime = true;
     private _timeScale = 1;
-    private _autoscaleTimeTarget = 1e-1 // m/s (1m = 1 grid line)
+    private _autoscaleTimeTarget = 1e0 // m/s (1m = 1 grid line)
     private _fastestParticleSpeed = 0
     private _restitution = 0.5
     private _friction = 0.5
     private _wallCollisionEnergyLoss = 0.1
     private totalMass = 0
     constructor(
-        particles: Particle[],
-        _simulationSpace: SimulationSpace,
+        props: Partial<PhysicsEngineParameters>,
         private _centerOfMassChangedCallback?: (centerOfMass: Vector3) => void
     ) {
-        this._particles = particles
-        this._origin = _simulationSpace.origin.clone()
-        this._end = _simulationSpace.origin.clone().add(_simulationSpace.size.clone())
+        this._particles = props.particles ?? []
+        this._origin = props.simulationSpace?.origin.clone() ?? new Vector3()
+        this._end = props.simulationSpace?.origin.clone().add(props.simulationSpace?.size.clone()) ?? new Vector3()
+        this._hasGravity = props.hasGravity ?? true
+        this._hasElectricField = props.hasElectricField ?? false
         if (this._hasGravity) usePlanetaryGravity(this._particles)
         this.totalMass = this._particles.reduce((acc, cur) => acc + cur.relativisticMass, 0)
     }
@@ -71,7 +72,7 @@ export class PhysicsEngine {
             }
             this._timeScale = this._fastestParticleSpeed / this._autoscaleTimeTarget
             deltaTime /= this._timeScale === 0 ? 1 : this._timeScale
-            console.log(`Autoscaling time to ${1 / this._timeScale}`)
+            //console.log(`Autoscaling time to ${1 / this._timeScale}`)
         }
 
         for (const particle of this._particles) {

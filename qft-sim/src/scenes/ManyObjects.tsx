@@ -15,15 +15,15 @@ function range(start: number, end: number, step: number = 1): number[] {
     return result
 }
 
-const particleCount = 200
-const initialCuboidSize = 1
+const particleCount = 100
+const initialCuboidSize = .1
 const particleSize = initialCuboidSize / 75
 
 const generateRandomParticles = () => range(0, particleCount).map((i) => new GenericParticle(new Color(0xff0000), {
-    position: new Vector3(Math.random() * initialCuboidSize / 3, Math.random() * initialCuboidSize / 5, Math.random() * initialCuboidSize / 3),
+    position: new Vector3(Math.random() * initialCuboidSize / 3, Math.random() * initialCuboidSize, Math.random() * initialCuboidSize / 3),
     speed: new Vector3(),
     acceleration: new Vector3(),
-    mass: 9.6e-31,//Math.random() * 1e3,
+    mass: Math.random() * 1e3 * (Math.random() < 0.1 ? 1e6 : 1) * (Math.random() < 0.1 ? 1e6 : 1), //9.6e-31,
     chargeEV: -1
 }))
 const MeshEdgesMaterial = shaderMaterial(
