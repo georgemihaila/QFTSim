@@ -1,5 +1,5 @@
 import { extend, useFrame } from '@react-three/fiber'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Color, Matrix4, Object3D, Vector3 } from 'three'
 import { Particle } from '../physics'
 import { SimulationSpace } from '../infra'
@@ -15,7 +15,7 @@ function range(start: number, end: number, step: number = 1): number[] {
     return result
 }
 
-const particleCount = 2500
+const particleCount = 200
 const initialCuboidSize = 1
 const particleSize = initialCuboidSize / 75
 
@@ -61,9 +61,10 @@ export function ManyObjects(props: any) {
 
     useFrame(({ clock }) => {
         const a = clock.getElapsedTime()
-        //simulationSpace.update()
+        simulationSpace.update()
+        render()
     })
-    useLayoutEffect(() => {
+    const render = useCallback(() => {
         for (let i = 0; i < particles.length; i++) {
             const particle = particles[i]
             o.rotation.set(Math.random(), Math.random(), Math.random())
@@ -74,7 +75,7 @@ export function ManyObjects(props: any) {
             ref.current.setMatrixAt(i, o.matrix)
         }
         ref.current.instanceMatrix.needsUpdate = true
-    }, [length])
+    }, [particles])
     return (
         <>
             <group {...props}>
