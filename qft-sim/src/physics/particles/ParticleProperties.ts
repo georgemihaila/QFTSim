@@ -25,11 +25,11 @@ export interface ParticleProperties extends RelativisticProperties {
     comptonWavelength?: number // in meters (m)
     magneticQuantumNumber?: number
     electricQuantumNumber?: number
-    position?: Vector3 // in meters (m)
+    position: Vector3 // in meters (m)
     speed?: Vector3 // in meters per second (m/s)
     rotation?: Vector3 // in radians
     rotationSpeed?: Vector3 // in radians per second (rad/s)
-    acceleration?: Vector3 // in meters per second squared (m/s^2)
+    acceleration: Vector3 // in meters per second squared (m/s^2)
     massTensor?: Tensor // a rank-2 tensor representing the mass distribution of the particle
     lengthTensor?: Tensor // a rank-2 tensor representing the length scaling of the particle
 }

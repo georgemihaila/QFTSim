@@ -1,7 +1,7 @@
 import { extend, useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Color, Matrix4, Object3D, Vector3 } from 'three'
-import { Particle } from '../physics'
+import { IWorldParameters, Particle } from '../physics'
 import { SimulationSpace } from '../infra'
 import { GenericParticle } from '../physics/particles/standard model/GenericParticle'
 import { animated } from '@react-spring/three'
@@ -15,17 +15,22 @@ function range(start: number, end: number, step: number = 1): number[] {
     return result
 }
 
-const particleCount = 100
-const initialCuboidSize = .1
-const particleSize = initialCuboidSize / 75
-
-const generateRandomParticles = () => range(0, particleCount).map((i) => new GenericParticle(new Color(0xff0000), {
-    position: new Vector3(Math.random() * initialCuboidSize / 3, Math.random() * initialCuboidSize, Math.random() * initialCuboidSize / 3),
-    speed: new Vector3(),
-    acceleration: new Vector3(),
-    mass: Math.random() * 1e3 * (Math.random() < 0.1 ? 1e6 : 1) * (Math.random() < 0.1 ? 1e6 : 1), //9.6e-31,
-    chargeEV: -1
-}))
+const generateRandomParticles = (particleCount: number, initialCuboidSize: number, maxMass: number) => [
+    ...range(0, particleCount).map((i) => new GenericParticle(new Color(0xff0000), {
+        position: new Vector3(Math.random() * initialCuboidSize / 1, Math.random() * initialCuboidSize / 1, Math.random() * initialCuboidSize / 1),
+        speed: new Vector3(),
+        acceleration: new Vector3(),
+        mass: 7.3e2 + Math.random() * 100, //9.6e-31,
+        chargeEV: -1
+    })),
+    ...range(0, 1).map((i) => new GenericParticle(new Color(0x0000ff), {
+        position: new Vector3(initialCuboidSize / 2 + Math.random() * (initialCuboidSize / 10), initialCuboidSize / 2, initialCuboidSize / 2),
+        speed: new Vector3(),
+        acceleration: new Vector3(),
+        mass: 5.972e4, //9.6e-31,
+        chargeEV: Math.random() * 100
+    }))
+]
 const MeshEdgesMaterial = shaderMaterial(
     {
         color: new Color('white'),
@@ -50,13 +55,27 @@ const MeshEdgesMaterial = shaderMaterial(
     }`
 )
 extend({ MeshEdgesMaterial })
-
-const orange = new Color('orange')
 const o = new Object3D()
 
-export function ManyObjects(props: any) {
+export interface IManyParticlesParams {
+    autoscaleTime: boolean
+    particleCount: number
+    initialCuboidSize: number
+    particleSize: number
+    particleColor: Color
+    particleMaxMass: number
+}
+
+export function ManyObjects({
+    autoscaleTime = true,
+    particleCount = 5000,
+    initialCuboidSize = 2,
+    particleSize = initialCuboidSize / 75,
+    particleColor = new Color(0xff0000),
+    particleMaxMass = 1e3
+}: Partial<IManyParticlesParams>) {
     const ref = useRef<any>()
-    const [particles, setparticles] = useState<Particle[]>(generateRandomParticles())
+    const [particles, setparticles] = useState<Particle[]>(generateRandomParticles(particleCount, initialCuboidSize, particleMaxMass))
     const simulationSpace = new SimulationSpace(new Vector3(0, 0, 0), new Vector3(initialCuboidSize * 1, initialCuboidSize * 1, initialCuboidSize * 1), particles)
 
     useFrame(({ clock }) => {
@@ -64,13 +83,16 @@ export function ManyObjects(props: any) {
         simulationSpace.update()
         render()
     })
+
     const render = useCallback(() => {
         for (let i = 0; i < particles.length; i++) {
             const particle = particles[i]
             o.rotation.set(Math.random(), Math.random(), Math.random())
             if (particle.properties.position)
                 o.position.set(particle.properties.position.x, particle.properties.position.y, particle.properties.position.z)
-            o.scale.set(particleSize, particleSize, particleSize)
+            const s = Math.log10(particle.properties.mass ?? 100) / 10 * particleSize
+            particle.scale.set(s, s, s)
+            o.scale.set(s, s, s)
             o.updateMatrix()
             ref.current.setMatrixAt(i, o.matrix)
         }
@@ -78,7 +100,7 @@ export function ManyObjects(props: any) {
     }, [particles])
     return (
         <>
-            <group {...props}>
+            <group >
                 <instancedMesh ref={ref} args={[undefined, undefined, particles.length]}>
                     <sphereGeometry />
                     <meshNormalMaterial />

@@ -1,9 +1,11 @@
-import React, { useEffect, useLayoutEffect } from 'react'
+import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import './App.css'
 import { Canvas } from '@react-three/fiber'
 import { Stage, Grid, OrbitControls } from '@react-three/drei'
-import { Conveyor, CoobScene, ManyObjects, TwoObjectsCollision } from './scenes'
+import { Conveyor, CoobScene, Fields, ManyObjects, TwoObjectsCollision } from './scenes'
 import { useGUI } from './infra/hooks'
+import { IWorldParameters } from './physics'
+import { Vector3 } from 'three'
 
 function App() {
   const ref = React.useRef<any>()
@@ -19,10 +21,12 @@ function App() {
   }, [])
 
   const [scene, setScene] = React.useState<React.ReactNode | undefined>()
-  const hooks = useGUI()
+  const [sceneName, setSceneName] = React.useState<string>('Many objects')
+  useGUI({
+    sceneChanged: setSceneName
+  })
   useLayoutEffect(() => {
-    console.log('scene changed', hooks?.scene)
-    switch (hooks?.scene?.trim()) {
+    switch (sceneName.trim()) {
       case 'Coob':
         setScene(<CoobScene />)
         break
@@ -34,13 +38,15 @@ function App() {
         break
       case 'Conveyor':
         setScene(<Conveyor />)
-        console.log('set')
+        break
+      case 'Fields':
+        setScene(<Fields />)
         break
       default:
         setScene(<ManyObjects />)
         break
     }
-  }, [hooks, hooks?.scene])
+  }, [sceneName])
 
   return (
     <div ref={ref} className="App">
@@ -48,7 +54,13 @@ function App() {
         width: width,
         height: height,
       }}
-        gl={{ logarithmicDepthBuffer: true }} shadows camera={{ position: [0, 0.3, 0.3], fov: 90, near: 0.0001, zoom: 1.5 }}>
+        gl={{ logarithmicDepthBuffer: true }} shadows camera={{
+          position: [7.5, 7.5, 7.5],
+          fov: 60,
+          near: 0.0001,
+          zoom: 1.5,
+          far: 150,
+        }}>
         <OrbitControls
           autoRotate
           autoRotateSpeed={0.0}
@@ -60,9 +72,11 @@ function App() {
           maxPolarAngle={Math.PI / 2} />
         <fog attach="fog" args={['black', 50, 100]} />
         <Stage intensity={0.5} environment="dawn" shadows={{ type: 'accumulative', bias: -0.001 }} adjustCamera={false}>
-          {scene}
+          <scene>
+            {scene}
+          </scene>
         </Stage>
-        <Grid renderOrder={-1} position={[0, -1.85, 0]} infiniteGrid cellSize={0.6} cellThickness={0.6} sectionSize={3.3} sectionThickness={1.5} fadeDistance={30} />
+        <Grid renderOrder={-1} position={[0, 0, 0]} infiniteGrid cellSize={0.6} cellThickness={0.6} sectionSize={3.3} sectionThickness={1.5} fadeDistance={30} />
       </Canvas>
     </div >
   )

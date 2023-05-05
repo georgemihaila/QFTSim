@@ -7,3 +7,4 @@ export * from './PhysicalConstants';
 export * from './quantum';
 
 export * from './Tensor';
+export * from './World';

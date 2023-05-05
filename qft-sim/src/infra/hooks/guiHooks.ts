@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { IWorldParameters } from '../../physics'
 import { Dispatch, SetStateAction } from 'react'
 import { useDebouncedState } from '@mantine/hooks'
+import { worldProps } from '../../physics/World'
 
 const defaultConfiguration = {
     gravitationalAcceleration: 9.81,
@@ -35,70 +36,65 @@ export interface IGuiParams {
     scene: string
 }
 
-const singleGUI = new GUI()
-let result: IGUIConfiguration | undefined = undefined
-let simplified: Partial<IGuiParams> | undefined = undefined
+export type Event<T> = (value: T) => void
 
-export const useGUI = () => {
+export interface GUIConfigurationChangedEvents {
+    sceneChanged: Event<string>
+}
 
-    const gui = singleGUI
-    useEffect(() => {
-        const [gravitationalAcceleration, setGravitationalAcceleration] = useDebouncedState(defaultConfiguration?.gravitationalAcceleration ?? 9.81, 200)
-        const [hasElectricField, setHasElectricField] = useState(defaultConfiguration?.hasElectricField ?? true)
-        const [hasGravity, setHasGravity] = useState(defaultConfiguration?.hasGravity ?? true)
-        const [timeScale, setTimeScale] = useDebouncedState(1, 500)
-        const [autoscaleTime, setAutoscaleTime] = useState(true)
-        const [autoscaleTimeTarget, setAutoscaleTimeTarget] = useDebouncedState(defaultConfiguration?.timeScale ?? 1e-1, 200)
-        const [scene, setScene] = useState("Many objects")
-        const generateSimpleConfiguration = () => {
-            simplified = {
-                scene
-            }
-        }
+export let gui = new GUI()
+
+export const useGUI = (props: Partial<GUIConfigurationChangedEvents>) => {
+    //useEffect(() => {
+    if (!called) {
         const worldFolder = gui.addFolder('World')
         const ga = worldFolder
             .add(defaultConfiguration, 'gravitationalAcceleration', 0, (defaultConfiguration?.gravitationalAcceleration ?? 9.81) * 2, 0.1)
-            .onChange((value: number) => { setGravitationalAcceleration(value) })
+            .onChange((value: number) => { worldProps.gravitationalAcceleration = value })
+        ga.setValue(worldProps.gravitationalAcceleration)
 
-        worldFolder.add(defaultConfiguration, 'hasElectricField')
-            .onChange((value: boolean) => { setHasElectricField(value) })
+        const ef = worldFolder.add(defaultConfiguration, 'hasElectricField')
+            .onChange((value: boolean) => { worldProps.hasElectricField = value })
+        ef.setValue(worldProps.hasElectricField)
         worldFolder.add(defaultConfiguration, 'hasGravity')
             .onChange((value: boolean) => {
-                setHasGravity(value)
+                worldProps.hasGravity = value
                 ga.enable(value)
             })
-
         const scenes = {
-            scene: "Many objects",
+            scene: "many",
             sceneName: 'Many objects'
         }
         const sceneFolder = gui.addFolder('Scene')
         sceneFolder
-            .add(scenes, 'sceneName', ["Many objects", "Coob", "Conveyor", "Simple collision"]).onChange((value: string) => {
-                setScene(value)
-                generateSimpleConfiguration()
+            .add(scenes, 'sceneName', ["Fields", "Many objects", "Coob", "Conveyor", "Simple collision"]).onChange((value: string) => {
+                if (props.sceneChanged) props.sceneChanged(value)
             })
 
         const simulationParamsFolder = gui.addFolder('Simulation parameters')
         const simulationParams = {
-            timeScale: timeScale,
-            autoscaleTime: autoscaleTime,
-            autoscaleTimeTarget: autoscaleTimeTarget
+            timeScale: 1e-3,
+            autoscaleTime: true,
+            autoscaleTimeTarget: 1e-2,
+            wallELoss: 0.2
         }
-        const ts = simulationParamsFolder.add(simulationParams, 'timeScale', 0, 10, 0.1)
-        ts.enable(false)
+        const ts = simulationParamsFolder.add(simulationParams, 'timeScale', 0.00001, 0.01, 0.001)
+        ts.enable(!worldProps.autoscaleTime)
+        ts.onChange((value: number) => { worldProps.timeScale = value })
 
-        const tt = simulationParamsFolder.add(simulationParams, 'autoscaleTimeTarget', 0.01, 1, 0.01).onChange((value: number) => { setAutoscaleTimeTarget(value) })
-        simulationParamsFolder.add(simulationParams, 'autoscaleTime').onChange((value: boolean) => {
+        const tt = simulationParamsFolder.add(simulationParams, 'autoscaleTimeTarget', worldProps.autoscaleTimeTargetMin, worldProps.autoscaleTimeTargetMax, 0.01,)
+        tt.onChange((value: number) => { worldProps.autoscaleTimeTarget = value })
+        const sp = simulationParamsFolder.add(simulationParams, 'autoscaleTime')
+        sp.onChange((value: boolean) => {
             if (value) {
-                setTimeScale(1)
                 ts.setValue(1)
             }
             ts.enable(!value)
             tt.enable(value)
+            worldProps.autoscaleTime = value
         })
-        if (!simplified) generateSimpleConfiguration()
+        const wallLoss = simulationParamsFolder.add(simulationParams, 'wallELoss', 0, 1, 0.1,).onChange((value: number) => { worldProps.wallELoss = value })
+        wallLoss.setValue(worldProps.wallELoss)
         called = true
-    }, [gui])
-    return simplified
+    }
 }

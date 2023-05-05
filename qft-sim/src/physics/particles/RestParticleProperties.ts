@@ -3,7 +3,7 @@ import { DecayMode } from '../DecayMode'
 import { QuarkFlavor, ParticleProperties, ParticleType, Isospin, Generation } from './ParticleProperties'
 import { ExistingAntiparticles, ExistingParticles, KnownParticle } from './ParticleTypes'
 
-export const ELECTRON_PROPERTIES: ParticleProperties = {
+export const ELECTRON_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Lepton,
     mass: 0.51099895000, // in MeV/c^2 (source: PDG)
     chargeEV: -1, // in elementary chargeEV units (e)
@@ -17,7 +17,7 @@ export const ELECTRON_PROPERTIES: ParticleProperties = {
     comptonWavelength: 2.42631023894e-12, // in meters (source: PDG)
 }
 
-export const PHOTON_PROPERTIES: ParticleProperties = {
+export const PHOTON_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.GaugeBoson,
     mass: 0,
     chargeEV: 0,
@@ -26,7 +26,7 @@ export const PHOTON_PROPERTIES: ParticleProperties = {
     decayModes: [],
 }
 
-export const ELECTRON_NEUTRINO_PROPERTIES: ParticleProperties = {
+export const ELECTRON_NEUTRINO_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Lepton,
     mass: 2.2, // eV/c^2
     chargeEV: 0,
@@ -36,7 +36,7 @@ export const ELECTRON_NEUTRINO_PROPERTIES: ParticleProperties = {
     decayModes: [],
 }
 
-export const MUON_PROPERTIES: ParticleProperties = {
+export const MUON_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Lepton,
     mass: 105.7, // MeV/c^2
     chargeEV: -1,
@@ -46,7 +46,7 @@ export const MUON_PROPERTIES: ParticleProperties = {
     decayModes: [],
 }
 
-export const TAU_PROPERTIES: ParticleProperties = {
+export const TAU_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Lepton,
     mass: 1776.82, // MeV/c^2
     chargeEV: -1,
@@ -56,7 +56,7 @@ export const TAU_PROPERTIES: ParticleProperties = {
     decayModes: [],
 }
 
-export const TAU_NEUTRINO_PROPERTIES: ParticleProperties = {
+export const TAU_NEUTRINO_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Lepton,
     mass: 15.5, // eV/c^2
     chargeEV: 0,
@@ -66,7 +66,7 @@ export const TAU_NEUTRINO_PROPERTIES: ParticleProperties = {
     decayModes: [],
 }
 
-export const UP_QUARK_PROPERTIES: ParticleProperties = {
+export const UP_QUARK_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Quark,
     flavor: QuarkFlavor.Up,
     mass: 2.2, // in MeV/c^2
@@ -74,7 +74,7 @@ export const UP_QUARK_PROPERTIES: ParticleProperties = {
     spin: 1 / 2, // in units of h-bar (ħ)
     baryonNumber: 1 / 3,
 }
-const DOWN_QUARK_PROPERTIES: ParticleProperties = {
+const DOWN_QUARK_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Quark,
     mass: 4.8, // in electron volts (eV)
     chargeEV: -1 / 3, // in elementary chargeEV units (e)
@@ -84,7 +84,7 @@ const DOWN_QUARK_PROPERTIES: ParticleProperties = {
     baryonNumber: 1 / 3,
 }
 
-const CHARM_QUARK_PROPERTIES: ParticleProperties = {
+const CHARM_QUARK_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Quark,
     mass: 1270, // in electron volts (eV)
     chargeEV: 2 / 3, // in elementary chargeEV units (e)
@@ -94,7 +94,7 @@ const CHARM_QUARK_PROPERTIES: ParticleProperties = {
     lifetime: 1.67e-12, // in seconds
 }
 
-export const STRANGE_QUARK_PROPERTIES: ParticleProperties = {
+export const STRANGE_QUARK_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Quark,
     mass: 93, // in electron volts (eV)
     chargeEV: -1 / 3, // in elementary chargeEV units (e)
@@ -104,7 +104,7 @@ export const STRANGE_QUARK_PROPERTIES: ParticleProperties = {
     baryonNumber: 1 / 3,
 }
 
-export const TOP_QUARK_PROPERTIES: ParticleProperties = {
+export const TOP_QUARK_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Quark,
     mass: 173100, // in electron volts (eV)
     chargeEV: 2 / 3, // in elementary chargeEV units (e)
@@ -115,7 +115,7 @@ export const TOP_QUARK_PROPERTIES: ParticleProperties = {
     lifetime: 5e-25, // in seconds
 }
 
-export const BOTTOM_QUARK_PROPERTIES: ParticleProperties = {
+export const BOTTOM_QUARK_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.Quark,
     mass: 4.18e+3, // in electron volts (eV)
     chargeEV: -1 / 3, // in elementary chargeEV units (e)
@@ -125,7 +125,7 @@ export const BOTTOM_QUARK_PROPERTIES: ParticleProperties = {
     baryonNumber: 1 / 3,
 }
 
-export const GLUON_PROPERTIES: ParticleProperties = {
+export const GLUON_PROPERTIES: Partial<ParticleProperties> = {
     type: ParticleType.GaugeBoson,
     mass: 0, // in electron volts (eV)
     chargeEV: 0, // in elementary chargeEV units (e)

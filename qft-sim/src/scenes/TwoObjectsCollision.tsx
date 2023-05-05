@@ -46,7 +46,7 @@ export function TwoObjectsCollision() {
     const ref = useRef<any>()
 
     const [particles, setparticles] = useState<Particle[]>(generateRandomParticles())
-    const simulationSpace = new SimulationSpace(new Vector3(0, 0, 0), new Vector3(initialCuboidSize * 3, initialCuboidSize * 3, initialCuboidSize * 3), particles)
+    const simulationSpace = new SimulationSpace(new Vector3(0, 0, 0), new Vector3(initialCuboidSize * 3, initialCuboidSize * 3, initialCuboidSize * 3), particles,)
 
     useFrame(({ clock }) => {
         const a = clock.getElapsedTime()
