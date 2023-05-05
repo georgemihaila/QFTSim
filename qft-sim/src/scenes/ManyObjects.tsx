@@ -68,7 +68,7 @@ export interface IManyParticlesParams {
 
 export function ManyObjects({
     autoscaleTime = true,
-    particleCount = 5000,
+    particleCount = 50000,
     initialCuboidSize = 2,
     particleSize = initialCuboidSize / 75,
     particleColor = new Color(0xff0000),

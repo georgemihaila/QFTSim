@@ -1,1 +1,1 @@
-export * from './GuiHooks'
+export * from './guiHooks';

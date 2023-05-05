@@ -6,6 +6,20 @@ import { Particle, PhysicalConstants, vector3ToArray, worldProps } from '..'
 export class GPUWrapper {
     public static gpu: GPU = new GPU({ mode: 'gpu' })
     private static newtonianGravityKernel?: any
+
+    // Region predefined GPU functions
+    private static getDistanceKernel = (n: number) => this.gpu.createKernel(function (
+        positions: number[][],
+        i: number,
+        j: number
+    ) {
+        return Math.sqrt(
+            (positions[i][0] - positions[j][0]) ** 2 +
+            (positions[i][1] - positions[j][1]) ** 2 +
+            (positions[i][2] - positions[j][2]) ** 2
+        )
+    }).setOutput([n, n])
+
     constructor(
     ) {
     }
@@ -47,5 +61,4 @@ export class GPUWrapper {
             }).setOutput([positions.length])
             return GPUWrapper.newtonianGravityKernel(positions, accelerations, masses, particles.length, worldProps.gravitationalAcceleration)
         }
-
 }

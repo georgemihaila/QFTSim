@@ -38,6 +38,16 @@ export class PhysicsEngine {
     }
 
     public update(deltaTime: number): void {
+        this.doUpdatesAsync().then(() => this.updatePosition(deltaTime))
+
+    }
+
+    private doingWork = false
+
+    private async doUpdatesAsync() {
+        if (this.doingWork) return Promise.reject()
+
+        this.doingWork = true
         if (worldProps.hasGravity) {
             //usePlanetaryGravity(this._particles)
             //useNewtonianGravity(this._particles)
@@ -47,7 +57,8 @@ export class PhysicsEngine {
         this.handleWallCollisions()
         //this.handleWallTeleportations()
         //this.handleCollisions()
-        this.updatePosition(deltaTime)
+
+        this.doingWork = false
     }
 
     // Update position, acceleration, and speed
