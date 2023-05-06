@@ -11,7 +11,7 @@ export interface IWorldParameters {
     wallELoss: 0.0
 }
 
-export const maxNumberOfParticles = 50000
+export const maxNumberOfParticles = 20000
 
 export const worldProps = {
     hasGravity: true,
@@ -25,6 +25,7 @@ export const worldProps = {
     wallELoss: 0.0,
     collisions: true,
     numberOfParticles: maxNumberOfParticles,
+    clusters: 3,
     baseParticleSize: 0.1,
     paused: true,
     calculateParticleSize: (mass?: number) => Math.log10(mass ?? 100) / 10 * worldProps.baseParticleSize

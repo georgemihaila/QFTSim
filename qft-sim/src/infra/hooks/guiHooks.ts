@@ -92,7 +92,7 @@ export const useGUI = (props: Partial<GUIConfigurationChangedEvents>) => {
             .add(worldProps,
                 'timeScale',
                 10,
-                30,
+                20,
                 1)
         ts.enable(!worldProps.autoscaleTime)
         ts.onChange((value: number) => { worldProps.timeScale = value })
@@ -111,8 +111,10 @@ export const useGUI = (props: Partial<GUIConfigurationChangedEvents>) => {
         })
         const wallLoss = simulationParamsFolder.add(simulationParams, 'wallELoss', 0, 1, 0.1,).onChange((value: number) => { worldProps.wallELoss = value })
         wallLoss.setValue(worldProps.wallELoss)
-        const np = simulationParamsFolder.add(worldProps, 'numberOfParticles', 100, 20000, 100,).onChange((value: number) => { worldProps.numberOfParticles = value })
+        const np = simulationParamsFolder.add(worldProps, 'numberOfParticles', 100, 20000, 100).onChange((value: number) => { worldProps.numberOfParticles = value })
         np.setValue(worldProps.numberOfParticles)
+        simulationParamsFolder.add(worldProps, 'clusters', 1, 20, 1).onChange((value: number) => { worldProps.clusters = value }).listen(true)
+
         called = true
     }
 }

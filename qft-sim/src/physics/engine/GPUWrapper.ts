@@ -16,15 +16,18 @@ export class GPUWrapper {
     public static applyNewtonianGravity =
         ({
             positions,
+            velocities,
             accelerations,
             masses
         }: IParticleCollectionDescriptor) => {
             GPUWrapper.newtonianGravityKernel ??= GPUWrapper.gpu.createKernel(function (
                 positions: number[][],
                 accelerations: number[][],
+                velocities: number[][],
                 masses: number[],
                 n: number,
-                gravitationalAcceleration: number
+                gravitationalAcceleration: number,
+                speedOfLight: number
             ) {
 
                 const i = this.thread.x
@@ -32,6 +35,11 @@ export class GPUWrapper {
                 let ax = accelerations[i][0]
                 let ay = accelerations[i][1]
                 let az = accelerations[i][2]
+
+                //This is where we store the acceleration deltas
+                const ix = ax
+                const iy = ay
+                const iz = az
 
                 for (let j = 0; j < n; j++) {
                     if (i === j) {
@@ -42,16 +50,18 @@ export class GPUWrapper {
                         (positions[i][1] - positions[j][1]) ** 2 +
                         (positions[i][2] - positions[j][2]) ** 2
                     )
-                    const deltaAcceleration = (gravitationalAcceleration * masses[j]) / (distance ** 2)
+                    const velocity = Math.sqrt(velocities[j][0] ** 2 + velocities[j][1] ** 2 + velocities[j][2] ** 2)
+                    const deltaAcceleration = (gravitationalAcceleration * masses[j] / Math.sqrt(1 - ((velocity * 1) ** 2) / (speedOfLight ** 2))) / (distance ** 2)
                     // Update acceleration through normalization
                     ax += deltaAcceleration * (positions[j][0] - positions[i][0]) / distance
                     ay += deltaAcceleration * (positions[j][1] - positions[i][1]) / distance
                     az += deltaAcceleration * (positions[j][2] - positions[i][2]) / distance
                 }
+
                 return [ax, ay, az]
             }).setOutput([positions.length])
 
-            return GPUWrapper.newtonianGravityKernel(positions, accelerations, masses, positions.length, worldProps.gravitationalAcceleration)
+            return GPUWrapper.newtonianGravityKernel(positions, accelerations, velocities, masses, positions.length, worldProps.gravitationalAcceleration, PhysicalConstants.SPEED_OF_LIGHT)
         }
 
     public static applyEMField =
@@ -70,13 +80,17 @@ export class GPUWrapper {
                 masses: number[],
                 n: number,
                 coulombConstant: number,
-                magneticConstant: number
+                magneticConstant: number,
+                speedOfLight: number
             ) {
                 const i = this.thread.x
 
                 let ax = accelerations[i * 3]
                 let ay = accelerations[i * 3 + 1]
                 let az = accelerations[i * 3 + 2]
+
+                const li = Math.sqrt(velocities[i] ** 2 + velocities[i] ** 2 + velocities[i] ** 2)
+
                 for (let j = 0; j < n; j++) {
                     if (i === j) {
                         continue
@@ -87,7 +101,11 @@ export class GPUWrapper {
                         (positions[i * 3 + 1] - positions[j * 3 + 1]) ** 2 +
                         (positions[i * 3 + 2] - positions[j * 3 + 2]) ** 2
                     )
-                    const deltaAcceleration = (coulombConstant * masses[j]) / (distance ** 2)
+                    const velocity = Math.sqrt(velocities[j] ** 2 + velocities[j] ** 2 + velocities[j] ** 2)
+                    const lj = Math.sqrt(1 - ((velocity * 1) ** 2) / (speedOfLight ** 2))
+                    const relativisticMass = masses[j] / lj
+                    const deltaAcceleration = (coulombConstant * relativisticMass) / (distance ** 2)
+
                     // Update acceleration through normalization
                     const dx = positions[j * 3] - positions[i * 3]
                     const dy = positions[j * 3 + 1] - positions[i * 3 + 1]
@@ -99,11 +117,11 @@ export class GPUWrapper {
                     az -= deltaAcceleration * dz / distance
                     // Magnetic force
                     const crossProduct = [
-                        velocities[i * 3 + 1] * dz - velocities[i * 3 + 2] * dy,
-                        velocities[i * 3 + 2] * dx - velocities[i * 3] * dz,
-                        velocities[i * 3] * dy - velocities[i * 3 + 1] * dx
+                        (velocities[i * 3 + 1] * dz - velocities[i * 3 + 2] * dy) / lj,
+                        (velocities[i * 3 + 2] * dx - velocities[i * 3] * dz) / lj,
+                        (velocities[i * 3] * dy - velocities[i * 3 + 1] * dx) / lj
                     ]
-                    const magneticForce = (magneticConstant * masses[j]) / (distance ** 3)
+                    const magneticForce = (magneticConstant * relativisticMass) / (distance ** 3)
                     ax += magneticForce * crossProduct[0]
                     ay += magneticForce * crossProduct[1]
                     az += magneticForce * crossProduct[2]
@@ -119,7 +137,9 @@ export class GPUWrapper {
                 masses,
                 masses.length,
                 PhysicalConstants.COULOMB_CONSTANT,
-                PhysicalConstants.VACUUM_PERMEABILITY * (PhysicalConstants.COULOMB_CONSTANT ** 2))
+                PhysicalConstants.VACUUM_PERMEABILITY * (PhysicalConstants.COULOMB_CONSTANT ** 2),
+                PhysicalConstants.SPEED_OF_LIGHT
+            )
 
         }
 

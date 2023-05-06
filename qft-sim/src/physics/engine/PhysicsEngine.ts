@@ -55,6 +55,7 @@ export class PhysicsEngine {
         if (worldProps.hasGravity) {
             accelerations = GPUWrapper.applyNewtonianGravity({
                 positions,
+                velocities,
                 masses,
                 accelerations,
             })
@@ -91,6 +92,7 @@ export class PhysicsEngine {
             particle.properties.acceleration.set(res[i][0], res[i][1], res[i][2])
             this.doingWork = false
         }
+        //console.log(this._particles[0])
     }
 
     // Update position, acceleration, and speed

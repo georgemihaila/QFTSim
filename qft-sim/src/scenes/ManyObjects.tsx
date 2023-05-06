@@ -60,8 +60,8 @@ const generateRandomParticles = (particleCount: number, initialCuboidSize: numbe
                     chargeEV: 0
                 })
             )
-        }*/
-
+        }
+    */
 
     return particles
 }
@@ -106,7 +106,7 @@ export function ManyObjects({
     autoscaleTime = true,
     particleCount = worldProps.numberOfParticles,
     initialCuboidSize = 15,
-    clusters = 3,
+    clusters = worldProps.clusters,
     particleSize = worldProps.baseParticleSize,
     particleColor = new Color(0xff0000),
     particleMaxMass = 1e5
