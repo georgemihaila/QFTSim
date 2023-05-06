@@ -1,11 +1,12 @@
 import { extend, useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Color, Matrix4, Object3D, Vector3 } from 'three'
-import { IWorldParameters, Particle } from '../physics'
+import { IWorldParameters, Particle, worldProps } from '../physics'
 import { SimulationSpace } from '../infra'
 import { GenericParticle } from '../physics/particles/standard model/GenericParticle'
 import { animated } from '@react-spring/three'
 import { shaderMaterial } from '@react-three/drei'
+import { useHotkeys } from '@mantine/hooks'
 
 function range(start: number, end: number, step: number = 1): number[] {
     const result: number[] = []
@@ -17,14 +18,14 @@ function range(start: number, end: number, step: number = 1): number[] {
 
 const generateRandomParticles = (particleCount: number, initialCuboidSize: number, maxMass: number) => [
     ...range(0, particleCount).map((i) => new GenericParticle(new Color(0xff0000), {
-        position: new Vector3(Math.random() * initialCuboidSize / 1, Math.random() * initialCuboidSize / 1, Math.random() * initialCuboidSize / 1),
+        position: new Vector3(initialCuboidSize * Math.random(), Math.random() * initialCuboidSize / 1, Math.random() * initialCuboidSize / 1),
         speed: new Vector3(),
         acceleration: new Vector3(),
         mass: 7.3e2 + Math.random() * 100, //9.6e-31,
         chargeEV: -1
     })),
-    ...range(0, 1).map((i) => new GenericParticle(new Color(0x0000ff), {
-        position: new Vector3(initialCuboidSize / 2 + Math.random() * (initialCuboidSize / 10), initialCuboidSize / 2, initialCuboidSize / 2),
+    ...range(0, 10).map((i) => new GenericParticle(new Color(0x0000ff), {
+        position: new Vector3(initialCuboidSize * Math.random(), initialCuboidSize / 2, initialCuboidSize / 2),
         speed: new Vector3(),
         acceleration: new Vector3(),
         mass: 5.972e4, //9.6e-31,
@@ -68,15 +69,19 @@ export interface IManyParticlesParams {
 
 export function ManyObjects({
     autoscaleTime = true,
-    particleCount = 50000,
-    initialCuboidSize = 2,
-    particleSize = initialCuboidSize / 75,
+    particleCount = worldProps.numberOfParticles,
+    initialCuboidSize = 5,
+    particleSize = worldProps.baseParticleSize,
     particleColor = new Color(0xff0000),
     particleMaxMass = 1e3
 }: Partial<IManyParticlesParams>) {
     const ref = useRef<any>()
     const [particles, setparticles] = useState<Particle[]>(generateRandomParticles(particleCount, initialCuboidSize, particleMaxMass))
-    const simulationSpace = new SimulationSpace(new Vector3(0, 0, 0), new Vector3(initialCuboidSize * 1, initialCuboidSize * 1, initialCuboidSize * 1), particles)
+    const simulationSpace = new SimulationSpace(new Vector3(-initialCuboidSize / 2, -0.5, -initialCuboidSize / 2), new Vector3(initialCuboidSize * 1, initialCuboidSize * 1, initialCuboidSize * 1), particles)
+
+    useHotkeys([['R', () => {
+        setparticles(generateRandomParticles(particleCount, initialCuboidSize, particleMaxMass))
+    }]])
 
     useFrame(({ clock }) => {
         const a = clock.getElapsedTime()
@@ -90,7 +95,7 @@ export function ManyObjects({
             o.rotation.set(Math.random(), Math.random(), Math.random())
             if (particle.properties.position)
                 o.position.set(particle.properties.position.x, particle.properties.position.y, particle.properties.position.z)
-            const s = Math.log10(particle.properties.mass ?? 100) / 10 * particleSize
+            const s = worldProps.calculateParticleSize(particle.properties.mass)
             particle.scale.set(s, s, s)
             o.scale.set(s, s, s)
             o.updateMatrix()

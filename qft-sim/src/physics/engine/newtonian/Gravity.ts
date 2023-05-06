@@ -2,7 +2,7 @@ import { Vector3 } from 'three'
 import { worldProps } from '../../World'
 import { Particle } from '../../particles'
 import { GPU } from 'gpu.js'
-import { GPUWrapper } from '..'
+import { GPUWrapper, IParticleCollectionDescriptor } from '..'
 
 export const usePlanetaryGravity = (particles: Particle[]) => {
     for (const particle of particles) {
@@ -39,35 +39,3 @@ export const useNewtonianGravity = (particles: Particle[]) => {
         }
     }
 }
-let calledOnce = false
-
-export const useNewtonianGravity_GPU = (particles: Particle[], gpu: GPU) => {
-    /*
-    if (calledOnce)
-        return
-    calledOnce = true*/
-
-
-
-    const res: number[][] = GPUWrapper.applyNewtonianGravity(particles)
-    for (let i = 0; i < particles.length; i++) {
-        const particle = particles[i]
-        if (!particle.properties.acceleration) {
-            particle.properties.acceleration = new Vector3()
-        }
-        if (!res[i] || res[i].length !== 3 || isNaN(res[i][0]) || isNaN(res[i][1]) || isNaN(res[i][2])) {
-            continue
-        }
-        particle.properties.acceleration.set(res[i][0], res[i][1], res[i][2])
-    }
-    /*
-    for (let i = 0; i < positions.length; i++) {
-        particles[i].properties.position?.set(positions[i][0], positions[i][1], positions.[i][2])
-    }*/
-}
-
-
-
-/*
-
-*/

@@ -1,8 +1,8 @@
-import { IWorldParameters, Particle, useElectricFieldRepulsion } from '../'
+import { GPUWrapper, IWorldParameters, Particle, useEMFieldRepulsion, vector3ToArray } from '../'
 import { Vector3 } from 'three'
 import { SimulationSpace } from '../../infra'
 import { PhysicalConstants } from '../'
-import { useNewtonianGravity, useNewtonianGravity_GPU, usePlanetaryGravity } from './newtonian/Gravity'
+import { useNewtonianGravity, usePlanetaryGravity } from './newtonian/Gravity'
 import { worldProps } from '../World'
 import { GPU } from 'gpu.js'
 
@@ -23,9 +23,8 @@ export class PhysicsEngine {
     private _restitution = 0.5
     private _friction = 0.5
     private totalMass = 0
-    private _gpu = new GPU({ mode: 'gpu' })
     private _rescaleTime = true
-
+    private _masses: number[]
     constructor(
         props: Partial<PhysicsEngineParameters>,
         private _centerOfMassChangedCallback?: (centerOfMass: Vector3) => void
@@ -35,30 +34,56 @@ export class PhysicsEngine {
         this._end = props.simulationSpace?.origin.clone().add(props.simulationSpace?.size.clone()) ?? new Vector3()
         if (worldProps.hasGravity) usePlanetaryGravity(this._particles)
         this.totalMass = this._particles.reduce((acc, cur) => acc + cur.relativisticMass, 0)
+        this._masses = this._particles.map(x => x.properties.mass ?? 0)
     }
 
     public update(deltaTime: number): void {
-        this.doUpdatesAsync().then(() => this.updatePosition(deltaTime))
+        if (!this.doingWork) this.doUpdatesAsync().then(() => this.updatePosition(deltaTime))
 
     }
 
     private doingWork = false
 
     private async doUpdatesAsync() {
-        if (this.doingWork) return Promise.reject()
-
         this.doingWork = true
+
+        const positions = this._particles.map(x => vector3ToArray(x.properties.position))
+        const masses = this._masses
+        let accelerations = this._particles.map(x => vector3ToArray(x.properties.acceleration))
+        const velocities = this._particles.map(x => x.properties.speed).map(vector3ToArray)
+
         if (worldProps.hasGravity) {
-            //usePlanetaryGravity(this._particles)
-            //useNewtonianGravity(this._particles)
-            useNewtonianGravity_GPU(this._particles, this._gpu)
+            accelerations = GPUWrapper.applyNewtonianGravity({
+                positions,
+                masses,
+                accelerations,
+            })
         }
-        if (worldProps.hasElectricField) useElectricFieldRepulsion(this._particles)
-        this.handleWallCollisions()
+        if (worldProps.hasEMField) {
+            accelerations = GPUWrapper.applyEMField({
+                positions,
+                masses,
+                accelerations,
+                velocities
+            })
+        }
+        if (worldProps.collisions) {
+            this.handleWallCollisions()
+        }
         //this.handleWallTeleportations()
         //this.handleCollisions()
-
-        this.doingWork = false
+        const res = accelerations
+        for (let i = 0; i < this._particles.length; i++) {
+            const particle = this._particles[i]
+            if (!particle.properties.acceleration) {
+                particle.properties.acceleration = new Vector3()
+            }
+            if (!res[i] || res[i].length !== 3 || isNaN(res[i][0]) || isNaN(res[i][1]) || isNaN(res[i][2])) {
+                continue
+            }
+            particle.properties.acceleration.set(res[i][0], res[i][1], res[i][2])
+            this.doingWork = false
+        }
     }
 
     // Update position, acceleration, and speed

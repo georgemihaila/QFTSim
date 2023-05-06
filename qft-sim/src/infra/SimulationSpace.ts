@@ -10,7 +10,7 @@ import {
 } from 'three'
 import { I3DObject } from './I3DObject'
 import { Renderable } from './IRenderable'
-import { PhysicsEngine, Particle, IWorldParameters } from '../physics'
+import { PhysicsEngine, Particle, IWorldParameters, worldProps } from '../physics'
 
 export class SimulationSpace {
     public origin: Vector3
@@ -33,10 +33,22 @@ export class SimulationSpace {
             simulationSpace: this
         }, _centerOfMassChangedCallback)
         this._particles = particles
+        //Add origin to each particle's position
+        for (let i = 0; i < this._particles.length; i++) {
+            this._particles[i].properties.position?.add(this.origin)
+        }
     }
 
+    private _ignoreDelta: boolean = false
+
     update(): void {
-        this._engine.update(this._clock.getDelta())
+        if (worldProps.paused) {
+            this._ignoreDelta = true
+            return
+        }
+        const delta = this._clock.getDelta()
+        this._engine.update(this._ignoreDelta ? 0 : delta)
+        if (this._ignoreDelta) this._ignoreDelta = false
         //update particle position and rotation based on the ref object
         const temp = new Object3D()
         for (let i = 0; i < this._particles.length; i++) {

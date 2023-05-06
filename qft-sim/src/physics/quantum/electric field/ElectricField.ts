@@ -1,6 +1,6 @@
 import { Particle, PhysicalConstants } from '../..'
 
-export const useElectricFieldRepulsion = (particles: Particle[]) => {
+export const useEMFieldRepulsion = (particles: Particle[]) => {
     for (let i = 0; i < particles.length; i++) {
         const particle_i = particles[i]
 

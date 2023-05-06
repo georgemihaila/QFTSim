@@ -7,8 +7,9 @@ import { worldProps } from '../../physics/World'
 
 const defaultConfiguration = {
     gravitationalAcceleration: 9.81,
-    hasElectricField: true,
+    hasEMField: true,
     hasGravity: true,
+    collisions: true,
 } as Partial<IWorldParameters>
 
 let called = false
@@ -18,7 +19,7 @@ export type FunctionHook<S> = readonly [value: S, setter: (value: S) => void]
 
 export interface IGUIConfiguration {
     gravitationalAcceleration: FunctionHook<number>
-    hasElectricField: Hook<Boolean>
+    hasEMField: Hook<Boolean>
     hasGravity: Hook<boolean>
     timeScale: FunctionHook<number>
     autoscaleTime: Hook<boolean>
@@ -28,7 +29,7 @@ export interface IGUIConfiguration {
 
 export interface IGuiParams {
     gravitationalAcceleration: number
-    hasElectricField: boolean
+    hasEMField: boolean
     hasGravity: boolean
     timeScale: number
     autoscaleTime: boolean
@@ -49,18 +50,26 @@ export const useGUI = (props: Partial<GUIConfigurationChangedEvents>) => {
     if (!called) {
         const worldFolder = gui.addFolder('World')
         const ga = worldFolder
-            .add(defaultConfiguration, 'gravitationalAcceleration', 0, (defaultConfiguration?.gravitationalAcceleration ?? 9.81) * 2, 0.1)
+            .add(defaultConfiguration, 'gravitationalAcceleration', 0, (defaultConfiguration?.gravitationalAcceleration ?? 9.81) * 4, 0.1)
             .onChange((value: number) => { worldProps.gravitationalAcceleration = value })
         ga.setValue(worldProps.gravitationalAcceleration)
 
-        const ef = worldFolder.add(defaultConfiguration, 'hasElectricField')
-            .onChange((value: boolean) => { worldProps.hasElectricField = value })
-        ef.setValue(worldProps.hasElectricField)
+        const ef = worldFolder.add(defaultConfiguration, 'hasEMField')
+            .onChange((value: boolean) => { worldProps.hasEMField = value })
+        ef.setValue(worldProps.hasEMField)
         worldFolder.add(defaultConfiguration, 'hasGravity')
             .onChange((value: boolean) => {
                 worldProps.hasGravity = value
                 ga.enable(value)
             })
+
+        const col = worldFolder.add(defaultConfiguration, 'collisions')
+            .onChange((value: boolean) => { worldProps.collisions = value })
+        col.setValue(worldProps.collisions)
+        col.listen(true)
+
+        ef.setValue(worldProps.hasEMField)
+
         const scenes = {
             scene: "many",
             sceneName: 'Many objects'
@@ -70,6 +79,7 @@ export const useGUI = (props: Partial<GUIConfigurationChangedEvents>) => {
             .add(scenes, 'sceneName', ["Fields", "Many objects", "Coob", "Conveyor", "Simple collision"]).onChange((value: string) => {
                 if (props.sceneChanged) props.sceneChanged(value)
             })
+        sceneFolder.add(worldProps, 'paused').onChange((value: boolean) => { worldProps.paused = value }).listen(true)
 
         const simulationParamsFolder = gui.addFolder('Simulation parameters')
         const simulationParams = {
@@ -83,6 +93,7 @@ export const useGUI = (props: Partial<GUIConfigurationChangedEvents>) => {
         ts.onChange((value: number) => { worldProps.timeScale = value })
 
         const tt = simulationParamsFolder.add(simulationParams, 'autoscaleTimeTarget', worldProps.autoscaleTimeTargetMin, worldProps.autoscaleTimeTargetMax, 0.01,)
+        tt.listen(true)
         tt.onChange((value: number) => { worldProps.autoscaleTimeTarget = value })
         const sp = simulationParamsFolder.add(simulationParams, 'autoscaleTime')
         sp.onChange((value: boolean) => {
@@ -93,6 +104,7 @@ export const useGUI = (props: Partial<GUIConfigurationChangedEvents>) => {
             tt.enable(value)
             worldProps.autoscaleTime = value
         })
+        sp.disable()
         const wallLoss = simulationParamsFolder.add(simulationParams, 'wallELoss', 0, 1, 0.1,).onChange((value: number) => { worldProps.wallELoss = value })
         wallLoss.setValue(worldProps.wallELoss)
         called = true

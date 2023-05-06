@@ -4,10 +4,16 @@ import { Canvas } from '@react-three/fiber'
 import { Stage, Grid, OrbitControls } from '@react-three/drei'
 import { Conveyor, CoobScene, Fields, ManyObjects, TwoObjectsCollision } from './scenes'
 import { useGUI } from './infra/hooks'
-import { IWorldParameters } from './physics'
+import { IWorldParameters, worldProps } from './physics'
 import { Vector3 } from 'three'
+import { useHotkeys } from '@mantine/hooks'
 
 function App() {
+  useHotkeys([
+    ['space', () => worldProps.paused = !worldProps.paused],
+    ['c', () => worldProps.collisions = !worldProps.collisions],
+    ['alt+mod+shift+X', () => console.log('Rick roll')],
+  ])
   const ref = React.useRef<any>()
   const [width, setWidth] = React.useState(window.innerWidth)
   const [height, setHeight] = React.useState(window.innerHeight)
@@ -76,7 +82,7 @@ function App() {
             {scene}
           </scene>
         </Stage>
-        <Grid renderOrder={-1} position={[0, 0, 0]} infiniteGrid cellSize={0.6} cellThickness={0.6} sectionSize={3.3} sectionThickness={1.5} fadeDistance={30} />
+        <Grid renderOrder={-1} position={[0, -1, 0]} infiniteGrid cellSize={0.6} cellThickness={0.6} sectionSize={3.3} sectionThickness={1.5} fadeDistance={30} />
       </Canvas>
     </div >
   )
