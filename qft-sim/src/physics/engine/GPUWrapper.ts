@@ -30,6 +30,7 @@ export class GPUWrapper {
                 let ax = accelerations[i][0]
                 let ay = accelerations[i][1]
                 let az = accelerations[i][2]
+
                 for (let j = 0; j < n; j++) {
                     if (i === j) {
                         continue
@@ -47,6 +48,7 @@ export class GPUWrapper {
                 }
                 return [ax, ay, az]
             }).setOutput([positions.length])
+
             return GPUWrapper.newtonianGravityKernel(positions, accelerations, masses, positions.length, worldProps.gravitationalAcceleration)
         }
 
@@ -60,65 +62,52 @@ export class GPUWrapper {
             velocities: number[][]
         }) => {
             GPUWrapper.newtonianGravityKernel ??= GPUWrapper.gpu.createKernel(function (
-                positions: number[][],
-                accelerations: number[][],
-                velocities: number[][],
+                positions: number[],
+                accelerations: number[],
+                velocities: number[],
                 masses: number[],
                 n: number,
                 coulombConstant: number,
                 magneticConstant: number
             ) {
-
                 const i = this.thread.x
 
-                let ax = accelerations[i][0]
-                let ay = accelerations[i][1]
-                let az = accelerations[i][2]
+                let ax = accelerations[i * 3]
+                let ay = accelerations[i * 3 + 1]
+                let az = accelerations[i * 3 + 2]
                 for (let j = 0; j < n; j++) {
                     if (i === j) {
                         continue
                     }
 
-
                     const distance = Math.sqrt(
-                        (positions[i][0] - positions[j][0]) ** 2 +
-                        (positions[i][1] - positions[j][1]) ** 2 +
-                        (positions[i][2] - positions[j][2]) ** 2
+                        (positions[i * 3] - positions[j * 3]) ** 2 +
+                        (positions[i * 3 + 1] - positions[j * 3 + 1]) ** 2 +
+                        (positions[i * 3 + 2] - positions[j * 3 + 2]) ** 2
                     )
                     const deltaAcceleration = (coulombConstant * masses[j]) / (distance ** 2)
                     // Update acceleration through normalization
-                    const dx = positions[j][0] - positions[i][0]
-                    const dy = positions[j][1] - positions[i][1]
-                    const dz = positions[j][2] - positions[i][2]
+                    const dx = positions[j * 3] - positions[i * 3]
+                    const dy = positions[j * 3 + 1] - positions[i * 3 + 1]
+                    const dz = positions[j * 3 + 2] - positions[i * 3 + 2]
 
                     // Electrostatic force
                     ax -= deltaAcceleration * dx / distance
                     ay -= deltaAcceleration * dy / distance
                     az -= deltaAcceleration * dz / distance
-                    // end
-                    /*
-                                        //Magnetic force
-                                        const vix = velocities[i][0]
-                                        const viy = velocities[i][1]
-                                        const viz = velocities[i][2]
-                    
-                                        const vjx = velocities[j][0]
-                                        const vjy = velocities[j][1]
-                                        const vjz = velocities[j][2]
-                                        //Cross product of velocities
-                                        const cpx = viy * vjz - viz * vjy
-                                        const cpy = viz * vjx - vix * vjz
-                                        const cpz = vix * vjy - viy * vjx
-                    
-                                        ax += magneticConstant * masses[j] * cpx / distance
-                                        ay += magneticConstant * masses[j] * cpy / distance
-                                        az += magneticConstant * masses[j] * cpz / distance
-                                        //end
-                    */
                 }
                 return [ax, ay, az]
-            }).setOutput([positions.length])
-            return GPUWrapper.newtonianGravityKernel(positions, accelerations, velocities, masses, positions.length, PhysicalConstants.COULOMB_CONSTANT, PhysicalConstants.VACUUM_PERMEABILITY * (PhysicalConstants.COULOMB_CONSTANT ** 2))
+            }).setOutput([masses.length])
+
+            return GPUWrapper.newtonianGravityKernel(
+                positions.flat(),
+                accelerations.flat(),
+                velocities.flat(),
+                masses,
+                masses.length,
+                PhysicalConstants.COULOMB_CONSTANT,
+                PhysicalConstants.VACUUM_PERMEABILITY * (PhysicalConstants.COULOMB_CONSTANT ** 2))
+
         }
 
     public static doCollisions =
@@ -198,6 +187,8 @@ export class GPUWrapper {
             }).setOutput([positions.length])
             return GPUWrapper.newtonianGravityKernel(positions, accelerations, velocities, masses, positions.length, 0.1)
         }
+
+
 
     public static getDistances(positions: number[][]) {
         const distances: number[][] = []

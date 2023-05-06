@@ -16,22 +16,56 @@ function range(start: number, end: number, step: number = 1): number[] {
     return result
 }
 
-const generateRandomParticles = (particleCount: number, initialCuboidSize: number, maxMass: number) => [
-    ...range(0, particleCount).map((i) => new GenericParticle(new Color(0xff0000), {
-        position: new Vector3(initialCuboidSize * Math.random(), Math.random() * initialCuboidSize / 1, Math.random() * initialCuboidSize / 1),
-        speed: new Vector3(),
-        acceleration: new Vector3(),
-        mass: 7.3e2 + Math.random() * 100, //9.6e-31,
-        chargeEV: -1
-    })),
-    ...range(0, 10).map((i) => new GenericParticle(new Color(0x0000ff), {
-        position: new Vector3(initialCuboidSize * Math.random(), initialCuboidSize / 2, initialCuboidSize / 2),
-        speed: new Vector3(),
-        acceleration: new Vector3(),
-        mass: 5.972e4, //9.6e-31,
-        chargeEV: Math.random() * 100
-    }))
-]
+const generateRandomParticles = (particleCount: number, initialCuboidSize: number, maxMass: number, clusters: number) => {
+    const particles = []
+    const clusterRadius = initialCuboidSize / (2 * clusters)
+    const translations = range(0, clusters).map((i) => Math.random() * (initialCuboidSize / clusters))
+    for (let i = 0; i < particleCount; i++) {
+        const clusterIndex = Math.floor(Math.random() * clusters)
+        const clusterCenter = new Vector3(
+            clusterRadius + clusterIndex * 2 * clusterRadius,
+            initialCuboidSize / 2,
+            initialCuboidSize / 2
+        )
+
+        const randomTheta = 2 * Math.PI * Math.random()
+        const randomPhi = Math.acos(2 * Math.random() - 1)
+        const randomRadius = clusterRadius * Math.cbrt(Math.random())
+
+        const position = new Vector3(
+            clusterCenter.x + randomRadius * Math.sin(randomPhi) * Math.cos(randomTheta),
+            clusterCenter.y + randomRadius * Math.sin(randomPhi) * Math.sin(randomTheta),
+            clusterCenter.z + randomRadius * Math.cos(randomPhi)
+        )
+        position.add(new Vector3(0, translations[clusterIndex], 0))
+
+        particles.push(
+            new GenericParticle(new Color(0xff0000), {
+                position: position,
+                speed: new Vector3(),
+                acceleration: new Vector3(),
+                mass: 7.3e2 + Math.random(),
+                chargeEV: -1
+            })
+        )
+    }
+    /*
+        for (let i = 0; i < 10; i++) {
+            particles.push(
+                new GenericParticle(new Color(0x0000ff), {
+                    position: new Vector3(initialCuboidSize * Math.random(), initialCuboidSize / 2, initialCuboidSize / 2),
+                    speed: new Vector3(),
+                    acceleration: new Vector3(),
+                    mass: 5.972e4,
+                    chargeEV: Math.random() * 100
+                })
+            )*/
+
+
+
+    return particles
+}
+
 const MeshEdgesMaterial = shaderMaterial(
     {
         color: new Color('white'),
@@ -65,22 +99,24 @@ export interface IManyParticlesParams {
     particleSize: number
     particleColor: Color
     particleMaxMass: number
+    clusters: number
 }
 
 export function ManyObjects({
     autoscaleTime = true,
     particleCount = worldProps.numberOfParticles,
-    initialCuboidSize = 5,
+    initialCuboidSize = 15,
+    clusters = 3,
     particleSize = worldProps.baseParticleSize,
     particleColor = new Color(0xff0000),
     particleMaxMass = 1e3
 }: Partial<IManyParticlesParams>) {
     const ref = useRef<any>()
-    const [particles, setparticles] = useState<Particle[]>(generateRandomParticles(particleCount, initialCuboidSize, particleMaxMass))
+    const [particles, setparticles] = useState<Particle[]>(generateRandomParticles(particleCount, initialCuboidSize, particleMaxMass, clusters))
     const simulationSpace = new SimulationSpace(new Vector3(-initialCuboidSize / 2, -0.5, -initialCuboidSize / 2), new Vector3(initialCuboidSize * 1, initialCuboidSize * 1, initialCuboidSize * 1), particles)
 
     useHotkeys([['R', () => {
-        setparticles(generateRandomParticles(particleCount, initialCuboidSize, particleMaxMass))
+        setparticles(generateRandomParticles(particleCount, initialCuboidSize, particleMaxMass, clusters))
     }]])
 
     useFrame(({ clock }) => {

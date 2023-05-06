@@ -72,7 +72,7 @@ export const useGUI = (props: Partial<GUIConfigurationChangedEvents>) => {
 
         const scenes = {
             scene: "many",
-            sceneName: 'Many objects'
+            sceneName: 'Clusters'
         }
         const sceneFolder = gui.addFolder('Scene')
         sceneFolder

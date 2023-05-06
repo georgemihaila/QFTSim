@@ -92,10 +92,14 @@ export class PhysicsEngine {
         const averageSpeed = new Vector3(0, 0, 0)
         let energy = 0
         this._fastestParticleSpeed = 0
+        const fastests: number[] = []
         if (worldProps.autoscaleTime) {
             for (const particle of this._particles) {
                 const speed = particle.properties.speed?.length() ?? 0
-                if (speed > this._fastestParticleSpeed) this._fastestParticleSpeed = speed
+                if (speed > this._fastestParticleSpeed) {
+                    this._fastestParticleSpeed = speed
+                    fastests.push(speed)
+                }
             }
             worldProps.timeScale = this._fastestParticleSpeed / (worldProps.autoscaleTimeTarget)
         }

@@ -64,8 +64,8 @@ function App() {
           position: [7.5, 7.5, 7.5],
           fov: 60,
           near: 0.0001,
-          zoom: 1.5,
-          far: 150,
+          zoom: 1,
+          far: 1500,
         }}>
         <OrbitControls
           autoRotate
@@ -76,13 +76,12 @@ function App() {
           enablePan
           makeDefault
           maxPolarAngle={Math.PI / 2} />
-        <fog attach="fog" args={['black', 50, 100]} />
         <Stage intensity={0.5} environment="dawn" shadows={{ type: 'accumulative', bias: -0.001 }} adjustCamera={false}>
           <scene>
             {scene}
           </scene>
         </Stage>
-        <Grid renderOrder={-1} position={[0, -1, 0]} infiniteGrid cellSize={0.6} cellThickness={0.6} sectionSize={3.3} sectionThickness={1.5} fadeDistance={30} />
+        <Grid renderOrder={-1} position={[0, -1, 0]} infiniteGrid cellSize={0.6} cellThickness={0.6} sectionSize={3.3} sectionThickness={1.5} fadeDistance={100} />
       </Canvas>
     </div >
   )
