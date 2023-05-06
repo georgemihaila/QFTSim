@@ -69,6 +69,13 @@ export class PhysicsEngine {
         }
         if (worldProps.collisions) {
             this.handleWallCollisions()
+            /*
+            GPUWrapper.doCollisions({
+                positions,
+                masses,
+                accelerations,
+                velocities
+            })*/
         }
         //this.handleWallTeleportations()
         //this.handleCollisions()
@@ -90,21 +97,24 @@ export class PhysicsEngine {
     private updatePosition(deltaTime: number): void {
         const averagePosition = new Vector3(0, 0, 0)
         const averageSpeed = new Vector3(0, 0, 0)
-        let energy = 0
-        this._fastestParticleSpeed = 0
-        const fastests: number[] = []
-        if (worldProps.autoscaleTime) {
-            for (const particle of this._particles) {
-                const speed = particle.properties.speed?.length() ?? 0
-                if (speed > this._fastestParticleSpeed) {
-                    this._fastestParticleSpeed = speed
-                    fastests.push(speed)
-                }
-            }
-            worldProps.timeScale = this._fastestParticleSpeed / (worldProps.autoscaleTimeTarget)
-        }
-        deltaTime /= worldProps.timeScale === 0 || !worldProps.autoscaleTime ? 1 : worldProps.timeScale
 
+
+        if (!worldProps.autoscaleTime) {
+            deltaTime /= Math.pow(10, worldProps.timeScale)
+        }
+        else {
+            this._fastestParticleSpeed = 0
+            if (worldProps.autoscaleTime) {
+                for (const particle of this._particles) {
+                    const speed = particle.properties.speed?.length() ?? 0
+                    if (speed > this._fastestParticleSpeed) {
+                        this._fastestParticleSpeed = speed
+                    }
+                }
+                worldProps.timeScale = this._fastestParticleSpeed / (worldProps.autoscaleTimeTarget)
+            }
+            deltaTime /= worldProps.timeScale === 0 ? Math.pow(10, worldProps.timeScale) : worldProps.timeScale
+        }
         for (const particle of this._particles) {
             const newSpeed = particle.properties.speed?.clone().add(particle.properties.acceleration?.clone().multiplyScalar(deltaTime) ?? new Vector3()) ?? new Vector3()
             const newPosition = particle.properties.position?.clone().add(particle.properties.speed?.clone().multiplyScalar(deltaTime) ?? new Vector3()) ?? new Vector3()

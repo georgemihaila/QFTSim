@@ -11,17 +11,17 @@ export interface IWorldParameters {
     wallELoss: 0.0
 }
 
-const maxNumberOfParticles = 5e4
+export const maxNumberOfParticles = 50000
 
 export const worldProps = {
     hasGravity: true,
     gravitationalAcceleration: 9.81,
-    hasEMField: false,
+    hasEMField: true,
     autoscaleTime: true,
-    timeScale: 0.5,
+    timeScale: 15,
     autoscaleTimeTarget: 0.3,
     autoscaleTimeTargetMin: 1e-36,
-    autoscaleTimeTargetMax: Math.pow(maxNumberOfParticles, 0.4),
+    autoscaleTimeTargetMax: Math.pow(maxNumberOfParticles, 0.6),
     wallELoss: 0.0,
     collisions: true,
     numberOfParticles: maxNumberOfParticles,

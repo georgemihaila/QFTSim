@@ -37,14 +37,14 @@ const generateRandomParticles = (particleCount: number, initialCuboidSize: numbe
             clusterCenter.y + randomRadius * Math.sin(randomPhi) * Math.sin(randomTheta),
             clusterCenter.z + randomRadius * Math.cos(randomPhi)
         )
-        position.add(new Vector3(0, translations[clusterIndex], 0))
+        position.add(new Vector3(0, translations[clusterIndex], translations[clusterIndex]))
 
         particles.push(
             new GenericParticle(new Color(0xff0000), {
                 position: position,
                 speed: new Vector3(),
                 acceleration: new Vector3(),
-                mass: 7.3e2 + Math.random(),
+                mass: maxMass + Math.random(),
                 chargeEV: -1
             })
         )
@@ -57,10 +57,10 @@ const generateRandomParticles = (particleCount: number, initialCuboidSize: numbe
                     speed: new Vector3(),
                     acceleration: new Vector3(),
                     mass: 5.972e4,
-                    chargeEV: Math.random() * 100
+                    chargeEV: 0
                 })
-            )*/
-
+            )
+        }*/
 
 
     return particles
@@ -109,7 +109,7 @@ export function ManyObjects({
     clusters = 3,
     particleSize = worldProps.baseParticleSize,
     particleColor = new Color(0xff0000),
-    particleMaxMass = 1e3
+    particleMaxMass = 1e5
 }: Partial<IManyParticlesParams>) {
     const ref = useRef<any>()
     const [particles, setparticles] = useState<Particle[]>(generateRandomParticles(particleCount, initialCuboidSize, particleMaxMass, clusters))

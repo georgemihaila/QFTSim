@@ -6,6 +6,8 @@ import { IParticleCollectionDescriptor, Particle, PhysicalConstants, vector3ToAr
 export class GPUWrapper {
     public static gpu: GPU = new GPU({ mode: 'gpu' })
     private static newtonianGravityKernel?: any
+    private static emFieldKernel?: any
+    private static collisionKernel?: any
 
     constructor(
     ) {
@@ -61,7 +63,7 @@ export class GPUWrapper {
         }: IParticleCollectionDescriptor & {
             velocities: number[][]
         }) => {
-            GPUWrapper.newtonianGravityKernel ??= GPUWrapper.gpu.createKernel(function (
+            GPUWrapper.emFieldKernel ??= GPUWrapper.gpu.createKernel(function (
                 positions: number[],
                 accelerations: number[],
                 velocities: number[],
@@ -95,11 +97,22 @@ export class GPUWrapper {
                     ax -= deltaAcceleration * dx / distance
                     ay -= deltaAcceleration * dy / distance
                     az -= deltaAcceleration * dz / distance
+                    // Magnetic force
+                    const crossProduct = [
+                        velocities[i * 3 + 1] * dz - velocities[i * 3 + 2] * dy,
+                        velocities[i * 3 + 2] * dx - velocities[i * 3] * dz,
+                        velocities[i * 3] * dy - velocities[i * 3 + 1] * dx
+                    ]
+                    const magneticForce = (magneticConstant * masses[j]) / (distance ** 3)
+                    ax += magneticForce * crossProduct[0]
+                    ay += magneticForce * crossProduct[1]
+                    az += magneticForce * crossProduct[2]
+
                 }
                 return [ax, ay, az]
             }).setOutput([masses.length])
 
-            return GPUWrapper.newtonianGravityKernel(
+            return GPUWrapper.emFieldKernel(
                 positions.flat(),
                 accelerations.flat(),
                 velocities.flat(),
@@ -119,7 +132,7 @@ export class GPUWrapper {
         }: IParticleCollectionDescriptor & {
             velocities: number[][]
         }) => {
-            GPUWrapper.newtonianGravityKernel ??= GPUWrapper.gpu.createKernel(function (
+            GPUWrapper.collisionKernel ??= GPUWrapper.gpu.createKernel(function (
                 positions: number[][],
                 accelerations: number[][],
                 velocities: number[][],
@@ -133,6 +146,7 @@ export class GPUWrapper {
                 let ax = accelerations[i][0]
                 let ay = accelerations[i][1]
                 let az = accelerations[i][2]
+
                 for (let j = 0; j < n; j++) {
                     if (i === j) {
                         continue
@@ -184,8 +198,8 @@ export class GPUWrapper {
 
                 }
                 return [ax, ay, az]
-            }).setOutput([positions.length])
-            return GPUWrapper.newtonianGravityKernel(positions, accelerations, velocities, masses, positions.length, 0.1)
+            }).setOutput([masses.length])
+            return GPUWrapper.collisionKernel(positions, accelerations, velocities, masses, masses.length, 0.1)
         }
 
 
